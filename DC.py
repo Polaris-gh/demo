@@ -16,15 +16,15 @@ file_path = "WHTC.xlsx"
 df = pd.read_excel(file_path)
 
 nox_signal = df["NOx排放浓度"].values
-N_multiple = len(nox_signal)
+nox_len = len(nox_signal)
 T = 1.0
 
 # 傅里叶变换
 yf = fft(nox_signal - np.mean(nox_signal))
-xf = fftfreq(N_multiple, T)[:N_multiple // 2]
+xf = fftfreq(nox_len, T)[:nox_len // 2]
 
 plt.figure(figsize=(10, 5))
-plt.plot(xf, 2.0 / N_multiple * np.abs(yf[:N_multiple // 2]))
+plt.plot(xf, 2.0 / nox_len * np.abs(yf[:nox_len // 2]))
 plt.title("NOx排放信号的频域表示（FFT）")
 plt.xlabel("频率 (Hz)")
 plt.ylabel("幅值")
@@ -71,12 +71,12 @@ corr_matrix = df_denoising.corr(method="pearson")
 target_corr = corr_matrix[denoised_target_col].dropna()
 
 # 获取最相关的前 N 个变量
-N_multiple = 10
+n_multiple = 10
 top_features = (
     target_corr.drop(labels=[denoised_target_col])
     .abs()
     .sort_values(ascending=False)
-    .head(N_multiple)
+    .head(n_multiple)
     .index.tolist()
 )
 
@@ -393,7 +393,7 @@ def count_parameters(model):
 # 固定随机种子及设备设置
 torch.manual_seed(100)
 device = torch.device("xpu" if torch.xpu.is_available() else "cpu")
-input_dim = N_multiple  # 输入维度
+# input_dim = n_multiple # 输入维度
 conv_archs = ((1, 16), (1, 32))  # CNN 卷积池化结构
 hidden_sizes_multi = [32, 64]
 hidden_size_single = 32
@@ -421,6 +421,8 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.early_stop = True
 
+
+# %%
 
 # %%
 import matplotlib
@@ -508,12 +510,12 @@ if __name__ == '__main__':
     window_size = 5
     win_stride = 1
     batch_size = 32
-    input_dim_multi = N_multiple
+    input_dim_multi = n_multiple
     device = torch.device("xpu" if torch.xpu.is_available() else "cpu")
 
     # 打印模型结构
     model = DualChannelModel(
-        input_dim_multi=N_multiple,
+        input_dim_multi=n_multiple,
         conv_archs=conv_archs,
         hidden_sizes_multi=hidden_sizes_multi,
         hidden_size_single=hidden_size_single,
@@ -585,7 +587,7 @@ feature_dim = 10
 
 # 构建模型
 model = DualChannelModel(
-    input_dim_multi=N_multiple,
+    input_dim_multi=n_multiple,
     conv_archs=conv_archs,
     hidden_sizes_multi=hidden_sizes_multi,
     hidden_size_single=hidden_size_single,
